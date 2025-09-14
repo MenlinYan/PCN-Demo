@@ -29,6 +29,7 @@ class PCNBaseOptimizer(nn.Module):
         v_list = [x_list[0]]
         for i in range(len(self.weights)):
             v_list.append(x_list[i] @ self.weights[i])
+        # TODO：不知道为什么，加上下面这句效果会好一些
         v_list[-1].retain_grad()
         return v_list
     
@@ -41,7 +42,7 @@ class PCNBaseOptimizer(nn.Module):
         # auto grad x
         begin = 1
         end = self.n_layers if y is None else self.n_layers - 1
-        # [DIFFERENCE]
+        # fix y
         if not y is None:
             x_list[-1].requires_grad = False
             x_list[-1] = y.detach()
@@ -58,21 +59,14 @@ class PCNBaseOptimizer(nn.Module):
                 self.visual_fig.set_x([xi[0].detach().cpu() for xi in x_list])
                 self.visual_fig.set_v([vi[0].detach().cpu() for vi in v_list])
                 self.visual_fig.visualize(phase="training infer" if y is not None else "prediction infer", rounds=it)
-        # detach 所有 x，避免 graph 传到外面
-        x_list = [x.detach() for x in x_list]
-        v_list = [v.detach() for v in v_list]
         return x_list, v_list
 
     def train_step(self, x, y, n_iter=50, lr_x=0.1, lr_w=0.001):
-        # x_list, v_list = self.inference(x, y, n_iter, lr=0.5, visualize=False)
-        # 1. inference 只更新 latent states
+        # 方案1：问题在于v_list在inference中E.backward()之后被清除了，导致train_step中E.backward()报错，需要重新计算一个v_list
+        # x_list, v_list = self.inference(x=x, y=y, n_iter=n_iter, lr=0.5, visualize=False)
+        # 方案2：像inference中那样重新计算v_list
         x_list, _ = self.inference(x, y, n_iter, lr=lr_x, visualize=False)
-
-        # 2. 用 inference 的结果重新 forward 一次
-        #    注意：这里不用 detach 的 v_list，而是重新算
         v_list = self.forward(x_list)
-
-        # 3. 如果有监督任务，把输出层替换成目标
         x_list[-1] = y
         E = self.compute_energy(x_list, v_list)
         self.optim_weights.zero_grad()
