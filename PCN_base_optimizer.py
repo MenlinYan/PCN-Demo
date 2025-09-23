@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from PCN_Visual import PCN_Visual
 
 class PCNBaseOptimizer(nn.Module):
