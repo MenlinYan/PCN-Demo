@@ -81,7 +81,7 @@ if __name__ == "__main__":
     W_true = torch.tensor([[2., 0.], [0., 2.]])
     y = x @ W_true
     dataloader = [(x, y)]
-    epochs = 5
+    epochs = 30
 
     ep_model = EPModel([2, 2, 2], beta=1e-3, n_iter=30, seed=42)
 
