@@ -100,14 +100,11 @@ class PCN_Z(nn.Module):
 
 if __name__ == "__main__":
     model = PCN_Z([2, 2, 2], seed=42)
-    # x = torch.tensor([[1., 1.],[2., 3.],[4., 5.],[3., 1.],[2., 5.]])
-    # w = torch.tensor([[2., 0.], [0., 2.]])
-    # y = x @ w
-    x = torch.randn(100, 2)
+    x = torch.randn(64, 2)
     w = torch.tensor([[2., 0.], [0., 2.]])
     y = x @ w
     B = 32
-    model.fit(x, y, batch_size=B, n_epochs=35, lr_w=0.01, visualize=False)
+    model.fit(x, y, batch_size=B, n_epochs=10, lr_w=0.01, visualize=False)
 
     x_test = torch.tensor([[1., 1.],[2., 3.],[4., 5.],[3., 1.],[2., 5.]])
     y_test = x_test @ w
