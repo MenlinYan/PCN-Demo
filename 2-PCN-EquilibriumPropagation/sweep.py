@@ -22,7 +22,8 @@ def cosine_similarities(bp_grads, ep_grads):
 def run_experiment(beta, n_iter, lr_state, n_epochs=5):
     torch.manual_seed(42)
     # toy 数据
-    x = torch.randn(10, 2)
+    # x = torch.randn(10, 2)
+    x = torch.tensor([[1., 1.], [2., 3.], [4., 5.], [3., 1.], [2., 5.]])
     W_true = torch.tensor([[2., 0.], [0., 2.]])
     y = x @ W_true
     dataloader = [(x, y)]
@@ -51,7 +52,7 @@ def run_experiment(beta, n_iter, lr_state, n_epochs=5):
 
 if __name__ == "__main__":
     # 超参数 sweep 范围
-    beta_list = [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 5e-2]
+    beta_list = [1e-6, 1e-3, 1e-1]
     n_iter_list = [1, 5, 10, 20]
     lr_state_list = [1e-3, 1e-2, 5e-2, 0.1, 0.2, 0.5]
 

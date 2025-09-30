@@ -1,16 +1,17 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from PCN_Visual import PCN_Visual
 
-class PCNBaseOptimizer(nn.Module):
+from Tools.PCN_Visual import PCN_Visual
+
+class PCNBaseAutoGrad(nn.Module):
     def __init__(self, dims, device="cpu"):
-        super(PCNBaseOptimizer, self).__init__()
+        super(PCNBaseAutoGrad, self).__init__()
         self.dims = dims
         # self.n_layers = len(dims) - 1
         self.n_layers = len(dims)
         self.weights = nn.ParameterList([
-            nn.Parameter(torch.randn(d_in, d_out))
+            nn.Parameter(torch.randn(d_in, d_out) * 0.1)
             for d_in, d_out in zip(self.dims[:-1], self.dims[1:])
         ])
 
@@ -28,14 +29,15 @@ class PCNBaseOptimizer(nn.Module):
         v_list = [x_list[0]]
         for i in range(len(self.weights)):
             v_list.append(x_list[i] @ self.weights[i])
-        # TODO：不知道为什么，加上下面这句效果会好一些
-        v_list[-1].retain_grad()
+            v_list[-1].retain_grad()
         return v_list
     
     def inference(self, x, y=None, n_iter=5, lr=0.1, visualize=False):
         x_list = [x]
-        # [DIFFERENCE]
+        # v_list = [x]
+        # training phase or prediction phase
         for i in range(self.n_layers - 1):
+            # v_list.append(x_list[-1] @ self.weights[i])
             x_next = x_list[-1] @ self.weights[i]
             x_list.append(x_next.clone().detach().requires_grad_(True))
         # auto grad x
@@ -45,13 +47,14 @@ class PCNBaseOptimizer(nn.Module):
         if not y is None:
             x_list[-1].requires_grad = False
             x_list[-1] = y.detach()
-        optim_x = torch.optim.SGD(x_list[begin:end], lr=lr)
         for it in range(n_iter):
             v_list = self.forward(x_list)
             E = self.compute_energy(x_list, v_list)
-            optim_x.zero_grad()
-            E.backward()
-            optim_x.step()
+            for x in x_list[begin:end]: 
+                if x.grad is not None: x.grad.zero_()
+            E.backward(retain_graph=True)
+            for i, x in enumerate(x_list[begin:end], start=begin):
+                x.data -= lr * x.grad
             if it % 10 == 0 or it == n_iter - 1:
                 print(f'Phase-{"training infer" if y is not None else "prediction infer"} Iter {it}, Energy: {E.item()}')
             if visualize:
@@ -61,15 +64,10 @@ class PCNBaseOptimizer(nn.Module):
         return x_list, v_list
 
     def train_step(self, x, y, n_iter=50, lr_x=0.1, lr_w=0.001):
-        # 方案1：问题在于v_list在inference中E.backward()之后被清除了，导致train_step中E.backward()报错，需要重新计算一个v_list
-        # x_list, v_list = self.inference(x=x, y=y, n_iter=n_iter, lr=0.5, visualize=False)
-        # 方案2：像inference中那样重新计算v_list
-        x_list, _ = self.inference(x, y, n_iter, lr=lr_x, visualize=False)
-        v_list = self.forward(x_list)
-        x_list[-1] = y
+        x_list, v_list = self.inference(x, y, n_iter, lr=0.5, visualize=False)
         E = self.compute_energy(x_list, v_list)
         self.optim_weights.zero_grad()
-        E.backward()
+        E.backward(retain_graph=True)
         self.optim_weights.step()
         return E.item()
 
@@ -82,7 +80,7 @@ class PCNBaseOptimizer(nn.Module):
             print(f'Epoch {epoch}, Energy: {epoch_loss / len(train_loader)}')
             
 if __name__ == "__main__":
-    model = PCNBaseOptimizer([2, 2, 2])
+    model = PCNBaseAutoGrad([2, 2, 2])
     x = torch.tensor([[1., 1.],[2., 3.],[4., 5.],[3., 1.],[2., 5.]])
     B = x.size(0)
     w = torch.tensor([[2., 0.], [0., 2.]])

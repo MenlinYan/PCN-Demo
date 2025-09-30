@@ -5,7 +5,6 @@ import torch.nn.functional as F
 from BPModel import BPModel
 from EPModel import EPModel
 
-
 # --------------------------
 # 梯度对比器
 # --------------------------
@@ -47,6 +46,8 @@ from EPModel import EPModel
 
 
 """
+
+
 class GradComparator:
     """
     通用梯度对比器
@@ -88,13 +89,14 @@ class GradComparator:
             "similarities": similarities
         }
 
+
 # --------------------------
 # 测试运行
 # --------------------------
 if __name__ == "__main__":
     torch.manual_seed(42)
-    x = torch.randn(10, 2)
-    W_true = torch.tensor([[2., 0.], [0., 2.]])
+    x = torch.tensor([[1., 1.], [2., 3.], [4., 5.], [3., 1.], [2., 5.]])
+    W_true = torch.tensor([[1., 0.], [0., 1.]])
     y = x @ W_true
     dataloader = [(x, y)]
     epochs = 5
@@ -129,7 +131,6 @@ if __name__ == "__main__":
                 "similarities": similarities
             }
             print("epoch", epoch, "similarities:", result["similarities"])
-
 
 """
     后记：

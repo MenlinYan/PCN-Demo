@@ -2,8 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
-from PCN_Visual import PCN_Visual
-import numpy as np
+from Tools.PCN_Visual import PCN_Visual
 
 torch.autograd.set_detect_anomaly(True)
 class PCN_Z(nn.Module):
