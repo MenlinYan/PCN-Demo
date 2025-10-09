@@ -4,10 +4,11 @@ import torch.nn.functional as F
 from Tools.PCN_Visual import PCN_Visual
 
 class PCNBaseOptimizer(nn.Module):
-    def __init__(self, dims, device="cpu"):
+    def __init__(self, dims, device="cpu", seed=42):
         super(PCNBaseOptimizer, self).__init__()
         self.dims = dims
         # self.n_layers = len(dims) - 1
+        torch.manual_seed(seed)
         self.n_layers = len(dims)
         self.weights = nn.ParameterList([
             nn.Parameter(torch.randn(d_in, d_out))
@@ -82,7 +83,7 @@ class PCNBaseOptimizer(nn.Module):
             print(f'Epoch {epoch}, Energy: {epoch_loss / len(train_loader)}')
             
 if __name__ == "__main__":
-    model = PCNBaseOptimizer([2, 2, 2])
+    model = PCNBaseOptimizer([2, 2, 2], seed=42)
     x = torch.tensor([[1., 1.],[2., 3.],[4., 5.],[3., 1.],[2., 5.]])
     B = x.size(0)
     w = torch.tensor([[2., 0.], [0., 2.]])
