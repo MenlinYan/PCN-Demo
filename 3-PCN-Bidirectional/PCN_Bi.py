@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from Tools.PCN_Bi_VIsual import PCN_Bi_Visual
-from Tools.PCN_Visual import PCN_Visual
+# from Tools.PCN_Bi_VIsual import PCN_Bi_Visual
+# from Tools.PCN_Visual import PCN_Visual
 
 
 class BiPCN(nn.Module):
@@ -33,7 +33,7 @@ class BiPCN(nn.Module):
         self.optim_V = torch.optim.Adam(
             list(self.V), lr=0.01
         )
-        self.visual_fig = PCN_Visual(depth=self.n_layers, device=device, fixed_xlim=(-5, 5), fixed_ylim=(-5, 5))
+        # self.visual_fig = PCN_Visual(depth=self.n_layers, device=device, fixed_xlim=(-5, 5), fixed_ylim=(-5, 5))
 
     def forward(self, x_list):
         vf_list = [x_list[0]]
