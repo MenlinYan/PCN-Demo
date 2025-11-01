@@ -1,9 +1,11 @@
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from Tools.PCN_Visual import PCN_Visual
-
 class PCNBaseAutoGrad(nn.Module):
     def __init__(self, dims, device="cpu"):
         super(PCNBaseAutoGrad, self).__init__()
